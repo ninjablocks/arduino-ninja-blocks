@@ -31,9 +31,9 @@ Usage Notes
 4. Use the Ninja Dashboard, REST interface, or helper libs to pissfart to your hearts content!
 
 <code>
-curl -H 'Content-Type: application/json' \
-   -X 'PUT' \
-   -d '{ "DA" : "Arduino REST FTW" }' \
+curl -H 'Content-Type: application/json' \\
+   -X 'PUT' \\
+   -d '{ "DA" : "Arduino REST FTW" }' \\
    -i https://api.ninja.is/rest/v0/device/ARDUINOBLOCK_0_0_7000?user_access_token=YOURTOKEN
 </code>
 
