@@ -1,7 +1,7 @@
 #include "NinjaBlockEthernet.h"
 // #include <MemoryFree.h> 
 
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+byte mac[] = { 0xCE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 
 EthernetClient client;
 EthernetClient recvclient;
@@ -30,28 +30,23 @@ void NinjaBlockClass::httppost(char *postData)
 	//String strData;
 	char strData[DATA_SIZE];
 	
-	for (int i=0;i <3;i++)
-	{
-		if(client.connected())
-		{		
-			sendHeaders(true,client);
-			client.print("Content-Length: ");
-			client.println(strlen(postData));
-			client.println();
-			client.println(postData);	
-			Serial.print("Sent=");
-			Serial.println(postData);		
-			client.flush();
-			return;
-		}
-		else
-		{
-			Serial.print("_");
-			client.flush();
-			client.stop();
-			client.connect(host,port);
-		}
+	Serial.print("_");
+	client.flush();
+	client.stop();
+	client.connect(host,port);
+	if (client.connected()) {
+		sendHeaders(true,client);
+		client.print("Content-Length: ");
+		client.println(strlen(postData));
+		client.println();
+		client.println(postData);	
+		Serial.print("Sent=");
+		Serial.println(postData);		
+		client.flush();
+	} else {
+		Serial.println("Send Failed");
 	}
+	return;
 }
 
 void NinjaBlockClass::sendHeaders(boolean isPOST, EthernetClient hclient) {
