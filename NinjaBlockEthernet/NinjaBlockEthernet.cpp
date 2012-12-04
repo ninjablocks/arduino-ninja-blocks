@@ -31,9 +31,11 @@ void NinjaBlockClass::httppost(char *postData)
 	char strData[DATA_SIZE];
 	
 	Serial.print("_");
-	client.flush();
-	client.stop();
-	client.connect(host,port);
+    if (!client.connected()) {
+        client.flush();
+        client.stop();
+        client.connect(host,port);
+    }
 	if (client.connected()) {
 		sendHeaders(true,client);
 		client.print("Content-Length: ");
