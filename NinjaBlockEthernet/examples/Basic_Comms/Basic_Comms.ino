@@ -34,7 +34,7 @@
      For the button we'll just ground pin 5 - feel free to wire up a button. In the real 
      world you would obviously want to debounce.
 
-     Connect an led to ping 13 and ground.
+     Connect an led to pin 13 and ground.
 
   2) Copy the NinjaBlock library into your Arduino libraries dir. 
   
