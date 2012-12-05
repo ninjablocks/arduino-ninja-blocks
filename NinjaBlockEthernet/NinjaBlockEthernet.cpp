@@ -89,38 +89,15 @@ void NinjaBlockClass::send(int data)
 }
 
 void NinjaBlockClass::ninjaMessage(boolean isInt, int intData, char *charData) {
-	char strSend[DATA_SIZE];
-	char strNumber[6];
-	
-	strcpy(strSend,"{\"GUID\": \"");
-	strcat(strSend,nodeID);
-	strcat(strSend, "_" );
-	strcat(strSend,guid);
-	strcat(strSend, "_");
-	itoa(vendorID, strNumber, 10);
-	strcat(strSend, strNumber);
-	strcat(strSend, "_");
-	itoa(deviceID, strNumber, 10);
-	strcat(strSend, strNumber);
-	strcat(strSend, "\",\"G\": \"");
-	strcat(strSend, guid);
-	strcat(strSend, "\",\"V\": ");
-	itoa(vendorID, strNumber, 10);
-	strcat(strSend, strNumber);
-	strcat(strSend,",\"D\": ");
-	itoa(deviceID, strNumber, 10);
-	strcat(strSend, strNumber);
-	strcat(strSend, ",\"DA\": ");
-	if (isInt) {
-		itoa(intData, strNumber, 10);
-		strcat(strSend, strNumber);
-	} else {
-		strcat(strSend, "\"");
-		strcat(strSend, charData);
-		strcat(strSend, "\"");
-	}
-	strcat(strSend, "}");
-	httppost(strSend);
+    char strSend[DATA_SIZE];
+    if(isInt) {
+        snprintf(strSend,DATA_SIZE,"{\"GUID\": \"%s_%s_%d_%d\",\"G\": \"%s\",\"V\": %d,\"D\": %d,\"DA\": %d}",nodeID,guid,vendorID,deviceID,guid,vendorID,deviceID,intData);
+    } else {
+        snprintf(strSend,DATA_SIZE,"{\"GUID\": \"%s_%s_%d_%d\",\"G\": \"%s\",\"V\": %d,\"D\": %d,\"DA\": \"%s\"}",nodeID,guid,vendorID,deviceID,guid,vendorID,deviceID,charData);
+    }
+    /* dumps to buffer: {\"GUID\": \"nodeID_guid_vendorID_deviceID\",\"G\": \"guid\",\"V\":vendorID,\"D\":deviceID,\"DA\":footer}
+     where footer is initData if isInt, and \charData\ otherwise */
+    httppost(strSend);
 }
 
 boolean NinjaBlockClass::receive(void)
