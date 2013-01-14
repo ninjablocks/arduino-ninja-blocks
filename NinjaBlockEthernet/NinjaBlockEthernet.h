@@ -15,7 +15,7 @@
 
 #define DATA_SIZE  128
 #define GUID_LEN	36
-#define DATA_LEN	64
+#define DATA_LEN	96
 
 class NinjaBlockClass {
 
