@@ -17,6 +17,8 @@
 #define GUID_LEN	36
 #define DATA_LEN	96
 
+class EthernetClient;
+
 class NinjaBlockClass {
 
 public:
@@ -24,7 +26,6 @@ public:
 	char *nodeID;
 	char *token;
 	char *guid;
-	char data[DATA_SIZE];
 	int port;
 	int vendorID;
 	int deviceID;
@@ -34,18 +35,19 @@ public:
 	int intDID;
 	int intDATA;
 	char strDATA[DATA_LEN];
-	boolean IsDATAString;
-	
+	bool IsDATAString;
+
 	int begin();
 	void send(int data);
 	void send(char *data);
-	boolean receive(void);
+	bool receive(void);
 	void httppost(char *postData);
-	boolean decodeJSON();
+	bool decodeJSON();
 
 private:
-	void ninjaMessage(boolean, int intData, char *charData);
-	void sendHeaders(boolean isPOST, EthernetClient hclient);
+	void ninjaMessage(bool, int intData, char *charData);
+	void sendHeaders(bool isPOST, EthernetClient hclient);
+	bool receiveConnected(void);
 };
 
 extern NinjaBlockClass NinjaBlock; 

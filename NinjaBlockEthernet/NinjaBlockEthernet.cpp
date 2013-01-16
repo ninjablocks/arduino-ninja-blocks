@@ -1,35 +1,38 @@
 #include "NinjaBlockEthernet.h"
-// #include <MemoryFree.h> 
+
+//#include <MemoryFree.h> 
 
 byte mac[] = { 0xCE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 
 EthernetClient client;
 EthernetClient recvclient;
 
+#define ALLNOTNULL(A, B, C, D) ((A!=NULL) && (B!=NULL) && (C!=NULL) && (D!=NULL))
+
+#define kEthernetBytes 4
+
 int NinjaBlockClass::begin()
 {
-	
-	if ((host==NULL) || (nodeID==NULL) || (token==NULL) || (guid==NULL))
-		return 1;		// make sure parameters are not NULL
-
-	if(Ethernet.begin(mac)==0)
-		return 1;		// Ethernet unable to obtain Dynamic IP address
-
-	Serial.print("IP: ");
-	for (byte thisByte = 0; thisByte < 4; thisByte++) 
+	int result = 1;
+	if (ALLNOTNULL(host, nodeID, token, guid) // has params
+		&& (Ethernet.begin(mac)!=0) // has Dynamic IP address
+		)
 	{
-		// print the value of each byte of the IP address:
-		Serial.print(Ethernet.localIP()[thisByte], DEC);
-		Serial.print(".");
+		result = 1;
+		Serial.print("IP: ");
+		for (byte thisByte = 0; thisByte < kEthernetBytes; thisByte++) 
+		{
+			// print the value of each byte of the IP address:
+			Serial.print(Ethernet.localIP()[thisByte], DEC);
+			Serial.print(".");
+		}
+		Serial.println();
 	}
-	Serial.println();
+	return result;
 }
 
 void NinjaBlockClass::httppost(char *postData)
-{
-	//String strData;
-	char strData[DATA_SIZE];
-	
+{	
 	Serial.print("_");
     if (!client.connected()) {
         client.flush();
@@ -51,7 +54,7 @@ void NinjaBlockClass::httppost(char *postData)
 	return;
 }
 
-void NinjaBlockClass::sendHeaders(boolean isPOST, EthernetClient hclient) {
+void NinjaBlockClass::sendHeaders(bool isPOST, EthernetClient hclient) {
 	char strData[DATA_LEN];
 	if (isPOST)  
 		strcpy(strData,"POST");
@@ -69,9 +72,9 @@ void NinjaBlockClass::sendHeaders(boolean isPOST, EthernetClient hclient) {
 	strcat(strData ,host);
 	strcat(strData, "\r\n");
 	hclient.print(strData);
-	hclient.print("User-Agent: Ninja Arduino 1.1\r\n");
-	hclient.print("Content-Type: application/json\r\n");
-	hclient.print("Accept: application/json\r\n");
+	hclient.print("User-Agent: Ninja Arduino 1.1\r\n\
+Content-Type: application/json\r\n\
+Accept: application/json\r\n");
 	strcpy(strData,"X-Ninja-Token: ");
 	strcat(strData, token);
 	strcat(strData,"\r\n");
@@ -88,32 +91,35 @@ void NinjaBlockClass::send(int data)
 	ninjaMessage(true, data, 0);
 }
 
-void NinjaBlockClass::ninjaMessage(boolean isInt, int intData, char *charData) {
-	char strSend[DATA_SIZE];
-	char strNumber[6];
-	
+//Most Arduinos, 2-byte int range -32,768 to 32,767 (max 6 chars)
+//Arduino Duo, 4-byte range -2,147,483,648 to 2,147,483,647 (max 11 chars)
+const char kNumLength = sizeof(int) * 3;
+char strNumber[kNumLength];
+//return reference to strNumber
+char *int2str(int num) {
+	return itoa(num, strNumber, 10); // base 10
+}
+char strSend[DATA_SIZE];
+void addStringAndUnderscore(char * str) {
+	strcat(strSend, str);
+	strcat(strSend, "_");
+}
+
+void NinjaBlockClass::ninjaMessage(bool isInt, int intData, char *charData) {
 	strcpy(strSend,"{\"GUID\": \"");
-	strcat(strSend,nodeID);
-	strcat(strSend, "_" );
-	strcat(strSend,guid);
-	strcat(strSend, "_");
-	itoa(vendorID, strNumber, 10);
-	strcat(strSend, strNumber);
-	strcat(strSend, "_");
-	itoa(deviceID, strNumber, 10);
-	strcat(strSend, strNumber);
+	addStringAndUnderscore(nodeID);
+	addStringAndUnderscore(guid);
+	addStringAndUnderscore(int2str(vendorID));
+	strcat(strSend, int2str(deviceID));
 	strcat(strSend, "\",\"G\": \"");
 	strcat(strSend, guid);
 	strcat(strSend, "\",\"V\": ");
-	itoa(vendorID, strNumber, 10);
-	strcat(strSend, strNumber);
+	strcat(strSend, int2str(vendorID));
 	strcat(strSend,",\"D\": ");
-	itoa(deviceID, strNumber, 10);
-	strcat(strSend, strNumber);
+	strcat(strSend, int2str(deviceID));
 	strcat(strSend, ",\"DA\": ");
 	if (isInt) {
-		itoa(intData, strNumber, 10);
-		strcat(strSend, strNumber);
+		strcat(strSend, int2str(intData));
 	} else {
 		strcat(strSend, "\"");
 		strcat(strSend, charData);
@@ -123,144 +129,145 @@ void NinjaBlockClass::ninjaMessage(boolean isInt, int intData, char *charData) {
 	httppost(strSend);
 }
 
-boolean NinjaBlockClass::receive(void)
-{
-	for (int i=0;i <2;i++)
+
+const char kStrHeaderEnd[] = {'\r', '\n', '\r', '\n'};
+const byte kHeaderLength = sizeof(kStrHeaderEnd);
+
+// will keep reading bytes until it has matched the header, or it has read all available bytes
+inline void skipHeader(const int bytesAvailable, int &bytesRead) {
+	//skip past header
+	for (uint8_t matching=0
+		; (matching < kHeaderLength) && (bytesRead < bytesAvailable)
+		; bytesRead++) {
+		matching = ((recvclient.read() == kStrHeaderEnd[matching]) ? matching+1 : 0);
+	}
+}
+
+const char kCharInvertedCommas	= '\"';
+bool NinjaBlockClass::receive(void) {
+	bool gotData = false;
+	if(!recvclient.connected())
 	{
-		if(recvclient.connected())
-		{	
-			boolean gotData=false;
-			int count=0;
-			int d = 0;
-			int start;
+		// connect if not connected
+		Serial.print(".");
+		recvclient.stop();
+		if(recvclient.connect(host,port)==1)
+		{
+			sendHeaders(false, recvclient);
+			recvclient.println();
+		}
+	}
+	if (recvclient.connected())
+	{
+		gotData = receiveConnected();
+	}
+	return gotData;
+}
 
-			while(recvclient.available())
-			{
-				char c = recvclient.read();
-				// Uncomment the below to print the entire response to the console
-				// Serial.print(c);
+// giving a name prefix, eg. -> G":" <-, skip past the value after it, and insert a string terminator
+// returns NULL, or the beginning of a string within data that has been null-terminated
+char * valueString(const char *name, char *data, int &index, const int length) {
+	char *result = NULL;
+	uint8_t nameLength = strlen(name);
+	for (uint8_t matching=0
+		; (matching < nameLength) && (index < length)
+		; index++) {
+		matching = ((data[index] == name[matching]) ? matching+1 : 0);
+	}
+	if (index < length) {
+		//if searching for a string seek end of string ("), otherwise (,) ends an int
+		char endChar = (data[index-1]==kCharInvertedCommas) ? kCharInvertedCommas : ',';
+		int start = index;
+		while ((index < length) && (data[index] != endChar)) {
+			index++;
+		}
+		if (index < length) {
+			data[index] = '\0'; // insert string terminator after value (string or int)
+			result = &data[start];
+		}
+	}
+	return result;
+}
 
-				if (d != 4) {
+bool NinjaBlockClass::receiveConnected(void) {
+	bool gotHeader = false;
+	bool gotData = false;
+	int bytesAvailable = recvclient.available();
+	if (bytesAvailable > 0)
+	{
+		int bytesRead = 0;
+		skipHeader(bytesAvailable, bytesRead);
+		gotHeader = (bytesRead < bytesAvailable); //skipped header without reaching end of available bytes
+		if (gotHeader) {
+			//reset counts
+			bytesAvailable -= bytesRead;
+			bytesRead = 0;
 
-					// This is a very coarse way to find the end of the headers
-					// We are looking for \r\n\r\n 
-					if (c == 0x0a || c == 0x0d) {
-						d++;
-					} else {
-						d = 0;
-					}
+			if (bytesAvailable > DATA_SIZE) {
+				Serial.print("ERR: DATA_SIZE");
+				return false;
+			}
 
-				} else {
+			char data[DATA_SIZE];
+			//read data into array eg. {"DEVICE":[{"G":"0","V":0,"D":1000,"DA":"FFFFFF"}]}
+			for (bytesRead=0; bytesRead<bytesAvailable; bytesRead++) {
+				data[bytesRead] = recvclient.read();
+				//Serial.print(data[bytesRead]);
+			}
+			data[bytesRead] = '\0'; //terminate data as string
+			bytesRead = 0;
+			char *strVal;
+			strVal = valueString("G\":\"", data, bytesRead, bytesAvailable);
+			if (strVal) {
+				strcpy(strGUID, strVal);
+				strVal = valueString("V\":", data, bytesRead, bytesAvailable);
+				if (strVal != NULL) {
+					intVID = atoi(strVal);
+					strVal = valueString("D\":", data, bytesRead, bytesAvailable);
+					if (strVal != NULL) {
+						intDID = atoi(strVal);
 
-					if (count<DATA_SIZE)
-					{
-						data[count]=c;
+					 	// Serial.print(" strGUID=");
+					 	// Serial.println(strGUID);
+					 	// Serial.print(" intVID=");
+					 	// Serial.println(intVID);
+					 	// Serial.print(" intDID=");
+					 	// Serial.println(intDID);
 
-						// 0x22 " 
-						// 0x2c , 
-						// 0x3a : 
-						// 0x41 A
-						// 0x44 D
-						// 0x47 G
-						
-						// We aren't using aJSON to save a few hundred bytes.
-						// JSON separator if prev 2 chars ":
-						if (data[count-2]==0x22 && data[count-1]==0x3a) {
-							// If " we assume the value is a string
-							if (c == 0x22) {
-								c = recvclient.read();							
-								if (data[count-3]==0x47) {
-									start = count;
-									while (c != 0x22) {
-										data[count]=c;
-										c = recvclient.read();	
-										count++;
-									}
-									memcpy( strGUID, &data[start], count-start );
-									strGUID[count-start] = 0;
-								}
-								else if (data[count-4]==0x44 && data[count-3]==0x41) {
-									start = count;
-									while (c != 0x22) {
-										data[count]=c;
-										c = recvclient.read();	
-										count++;
-									}
-									memcpy( strDATA, &data[start], count-start );
-									strDATA[count-start] = 0;
-									IsDATAString=true;
-									gotData=true;
-								}
-							} else {
-								// Assume Int value 
-								if (data[count-3]==0x44) {
-									start = count;
-									while (c != 0x2c) {
-										data[count]=c;
-										c = recvclient.read();
-										count++;
-									}
-									// There must be a cleaner way to do this
-									char tmp[count-start];
-									memcpy( tmp, &data[start], count-start );
-									tmp[count-start] = 0;
-									intDID = atoi(tmp);
-								} 
-								else if (data[count-3]==0x56) {
-									start = count;
-									while (c != 0x2c) {
-										data[count]=c;
-										c = recvclient.read();
-										count++;
-									}
-									// There must be a cleaner way to do this
-									char tmp[count-start];
-									memcpy( tmp, &data[start], count-start );
-									tmp[count-start] = 0;
-									intVID = atoi(tmp);
-								}
-
+						int start = bytesRead;
+						strVal = valueString("DA\":\"", data, bytesRead, bytesAvailable);
+						if (strVal != NULL) {
+							strcpy(strDATA, strVal);
+							IsDATAString = true;
+							gotData = true;
+							// Serial.print("strDATA=");
+							// Serial.println(strDATA);
+						}
+						else { // may be an int value
+							bytesRead = start; // reset to where we were before attempting (data is unmodified if NULL was returned)
+							strVal = valueString("DA\":", data, bytesRead, bytesAvailable);
+							if (strVal) {
+								intDATA = atoi(strVal);
+								IsDATAString = false;
+								gotData = true;
+								// Serial.print("intDATA=");
+								// Serial.println(intDATA);
 							}
 						}
-
-						count++;
-
-						// DEBUG
-						// Look for \n as the end of the message
-						// if (c==0x0a) 
-						// {
-						// 	Serial.print("strDATA=");
-						// 	Serial.print(strDATA);
-						// 	Serial.print(" strGUID=");
-						// 	Serial.print(strGUID);
-						// 	Serial.print(" intDID=");
-						// 	Serial.print(intDID);
-						// 	Serial.print(" intVID=");
-						// 	Serial.println(intVID);
-						// }
 					}
 				}
 			}
-			if (d == 4) {
-				recvclient.flush();
-				delay(100);
-				recvclient.stop();
-				delay(100);
-			}
-			return gotData;
-		}
-		else
-		{
-			Serial.print(".");
-			recvclient.stop();
-			// Create connection
-			if(recvclient.connect(host,port)==1)
-			{
-				sendHeaders(false, recvclient);
-				recvclient.println();
-			}
 		}
 	}
+	if (gotHeader) {
+		//if a header was received, there was some data after (either json, or some html etc)
+		//purge and close the stream
+		recvclient.flush();
+		delay(100);
+		recvclient.stop();
+		delay(100);
+	}
+	return gotData;
 }
 
 NinjaBlockClass NinjaBlock;

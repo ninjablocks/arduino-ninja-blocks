@@ -1,5 +1,5 @@
 /*
-  NinjaBlock Matrix Display Example - @askpete
+  NinjaBlock Basic Comms Example - @askpete
   
   This sketch uses the NinjaBlockEthernet library to create a rudimentary button sensor 
   and a simple led actuator. This is awesome because it gives your Arduino project a
