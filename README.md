@@ -25,7 +25,7 @@ You need a Ninja Blocks account to get tokens, signup at https://a.ninja.is
 Usage Notes
 -----------
 
-1. Hit the forums http://ninjablocks.com/forum if something isn't clear. 
+1. Hit the forums http://forums.ninjablocks.com if something isn't clear. 
 2. Copy your libraries into the Arduino IDEs library folder 
 3. Get a virtual_block_token from https://a.ninja.is/hacking 
 4. Use the Ninja Dashboard, REST interface, or helper libs to pissfart to your hearts content!
