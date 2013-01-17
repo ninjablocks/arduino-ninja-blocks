@@ -1,12 +1,12 @@
-#ifndef NinjaLightObjects_h
-#define NinjaLightObjects_h
+#ifndef NinjaBlocksSerial_h
+#define NinjaBlocksSerial_h
 
 #define recvLEN 	128			// this is really bad, will need to work out dynamic length
 #define GUID_LEN	36
 #define DATA_LEN	64
 
 
-class NinjaLightObjects {
+class NinjaBlocksSerial {
 	private:
 
 		
@@ -28,7 +28,7 @@ class NinjaLightObjects {
 		char strDATA[DATA_LEN];
 		boolean IsDATAString;
 
-		NinjaLightObjects ();
+		NinjaBlocksSerial ();
 		//void sendObjects();
 		boolean doReactors();
 		boolean decodeJSON();
@@ -38,5 +38,5 @@ class NinjaLightObjects {
 		int readSerialString ();
 };
 
-extern NinjaLightObjects lOBJECTS;
+extern NinjaBlocksSerial ninjaBlock;
 #endif

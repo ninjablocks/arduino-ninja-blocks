@@ -1,5 +1,5 @@
 /*
-	NinjaLightObjects.cpp - Ninja Light Objects library
+	NinjaBlocksSerial.cpp - Ninja Light Objects library
 	
 	Based on the aJson example from http://interactive-matter.eu/how-to/ajson-arduino-json-library/
 
@@ -23,11 +23,11 @@
 
 #include <Arduino.h>
 #include <aJSON.h>
-#include <NinjaLightObjects.h>
+#include <NinjaBlocksSerial.h>
 
-NinjaLightObjects lOBJECTS;
+NinjaBlocksSerial ninjaBlock;
 
-NinjaLightObjects::NinjaLightObjects()
+NinjaBlocksSerial::NinjaBlocksSerial()
 {
 		intVID=0;
 		intDID=0;
@@ -36,7 +36,7 @@ NinjaLightObjects::NinjaLightObjects()
 }
 
 //read a string from the serial and store it in an array
-int NinjaLightObjects::readSerialString () 
+int NinjaBlocksSerial::readSerialString () 
 {
 	int i=0;
 	if(!Serial.available()) 
@@ -56,7 +56,7 @@ int NinjaLightObjects::readSerialString ()
 	return i;
 }
 
-boolean NinjaLightObjects::decodeJSON()
+boolean NinjaBlocksSerial::decodeJSON()
 {
 	boolean IsJSONValid=false;
 	aJsonObject* rootObject = aJson.parse(serInStr);
@@ -111,20 +111,13 @@ boolean NinjaLightObjects::decodeJSON()
 				}
 			}
 		}
-
 		aJson.deleteItem(rootObject);
-	
-		if(IsJSONValid)
-			return true;
-		else
-			return false;  
 	}
-	else
-		return false;
+	return IsJSONValid;
 }
 
 // Ninja reactor processing
-boolean NinjaLightObjects::doReactors()
+boolean NinjaBlocksSerial::doReactors()
 {
 	int spos = readSerialString();
 
@@ -152,7 +145,7 @@ boolean NinjaLightObjects::doReactors()
 	return false;
 }
 
-void NinjaLightObjects::doJSONError(int errorCode)
+void NinjaBlocksSerial::doJSONError(int errorCode)
 {
 	aJsonObject* root = aJson.createObject();
 	if (root == NULL)
@@ -178,7 +171,7 @@ void NinjaLightObjects::doJSONError(int errorCode)
 	free(string);
 }
 
-void NinjaLightObjects::doJSONResponse()
+void NinjaBlocksSerial::doJSONResponse()
 {
 	aJsonObject* root = aJson.createObject();
 	if (root == NULL)
@@ -211,7 +204,7 @@ void NinjaLightObjects::doJSONResponse()
 	free(string);
 }
 
-void NinjaLightObjects::doJSONData(char * strGUID, int intVID, int intDID, char * strDATA, double numDATA, bool IsString, byte dataTYPE)
+void NinjaBlocksSerial::doJSONData(char * strGUID, int intVID, int intDID, char * strDATA, double numDATA, bool IsString, byte dataTYPE)
 {
 	int tempDATA=0;
 	
