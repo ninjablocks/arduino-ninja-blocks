@@ -91,7 +91,7 @@ void setup(){
     NinjaBlock.host = "api.ninja.is";
     NinjaBlock.port = 80;
     NinjaBlock.nodeID = "ARDUINOBLOCK";
-    NinjaBlock.token = "de151f899bb766b1a30a507f7a97d89b7d9f343cb087f77555b6924e97bd61a5"; // Get yours from https://a.ninja.is/hacking 
+    NinjaBlock.token = "VIRTUAL_BLOCK_TOKEN"; // Get yours from https://a.ninja.is/hacking 
     NinjaBlock.guid = "0";
     NinjaBlock.vendorID=DEFAULT_VENDOR_ID;
     NinjaBlock.deviceID=LED_DEVICE_ID;
