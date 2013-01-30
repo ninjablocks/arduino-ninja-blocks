@@ -7,14 +7,14 @@ byte mac[] = { 0xCE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 EthernetClient client;
 EthernetClient recvclient;
 
-#define ALLNOTNULL(A, B, C, D) ((A!=NULL) && (B!=NULL) && (C!=NULL) && (D!=NULL))
+#define ALLNOTNULL(A, B, C) ((A!=NULL) && (B!=NULL) && (C!=NULL))
 
 #define kEthernetBytes 4
 
 int NinjaBlockClass::begin()
 {
 	int result = 1;
-	if (ALLNOTNULL(host, nodeID, token, guid) // has params
+	if (ALLNOTNULL(host, nodeID, token) // has connection params
 		&& (Ethernet.begin(mac)!=0) // has Dynamic IP address
 		)
 	{
@@ -106,27 +106,29 @@ void addStringAndUnderscore(char * str) {
 }
 
 void NinjaBlockClass::ninjaMessage(bool isInt, int intData, char *charData) {
-	strcpy(strSend,"{\"GUID\": \"");
-	addStringAndUnderscore(nodeID);
-	addStringAndUnderscore(guid);
-	addStringAndUnderscore(int2str(vendorID));
-	strcat(strSend, int2str(deviceID));
-	strcat(strSend, "\",\"G\": \"");
-	strcat(strSend, guid);
-	strcat(strSend, "\",\"V\": ");
-	strcat(strSend, int2str(vendorID));
-	strcat(strSend,",\"D\": ");
-	strcat(strSend, int2str(deviceID));
-	strcat(strSend, ",\"DA\": ");
-	if (isInt) {
-		strcat(strSend, int2str(intData));
-	} else {
-		strcat(strSend, "\"");
-		strcat(strSend, charData);
-		strcat(strSend, "\"");
+	if (guid != NULL) {
+		strcpy(strSend,"{\"GUID\": \"");
+		addStringAndUnderscore(nodeID);
+		addStringAndUnderscore(guid);
+		addStringAndUnderscore(int2str(vendorID));
+		strcat(strSend, int2str(deviceID));
+		strcat(strSend, "\",\"G\": \"");
+		strcat(strSend, guid);
+		strcat(strSend, "\",\"V\": ");
+		strcat(strSend, int2str(vendorID));
+		strcat(strSend,",\"D\": ");
+		strcat(strSend, int2str(deviceID));
+		strcat(strSend, ",\"DA\": ");
+		if (isInt) {
+			strcat(strSend, int2str(intData));
+		} else {
+			strcat(strSend, "\"");
+			strcat(strSend, charData);
+			strcat(strSend, "\"");
+		}
+		strcat(strSend, "}");
+		httppost(strSend);
 	}
-	strcat(strSend, "}");
-	httppost(strSend);
 }
 
 
