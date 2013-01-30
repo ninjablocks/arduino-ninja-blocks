@@ -48,6 +48,7 @@ void NinjaBlockClass::httppost(char *postData)
 		Serial.print("Sent=");
 		Serial.println(postData);		
 		client.flush();
+		client.stop();
 	} else {
 		Serial.println("Send Failed");
 	}
