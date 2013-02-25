@@ -5,6 +5,8 @@
   and a simple led actuator. This is awesome because it gives your Arduino project a
   REST interface in a couple of minutes.
   
+  @justy : Note that the EtherTen reserves pins 11-13 for Ethernet and Card operations
+  
   Ninja Params
   ------------
   
@@ -70,10 +72,10 @@
 #define LED_DEVICE_ID 1000
 #define BUTTON_DEVICE_ID 5
 
+#define ENABLE_SERIAL true    // @justy : You may wish to disable Serial, but it's also handy to be able to use it for debugging, so here's a master switch.
+
 byte button = 5; // Jumper this to ground to press the "button"
-byte led = 13;  // A lot of Arduino's have an on board led connected to pin 13 and/or a 
-                // a built in 1k resistor, so you can just play with the led that there
-                // or stick an LED directly into 13 and ground.
+byte led = 7;  // Connect the anode (long lead, +ve) of a LED to this pin, and connect that LED's cathode (short lead, -ve) to GND through a 330R-1K resistor. 
 
 boolean isButtonDown = false;
 
@@ -83,14 +85,15 @@ void setup(){
     digitalWrite(button, HIGH); // Use the built in pull up resistor
 
     pinMode(led, OUTPUT);  
-
+  #if ENABLE_SERIAL
     Serial.begin(9600);
     Serial.println("Starting..");
+  #endif
     delay(1000);   // This delay is to wait for the Ethernet Controller to get ready
 
     NinjaBlock.host = "api.ninja.is";
     NinjaBlock.port = 80;
-    NinjaBlock.nodeID = "ARDUINOBLOCK";
+    NinjaBlock.nodeID = "ARDUINOBLOCK";  // Name this as you wish
     NinjaBlock.token = "VIRTUAL_BLOCK_TOKEN"; // Get yours from https://a.ninja.is/hacking 
     NinjaBlock.guid = "0";
     NinjaBlock.vendorID=DEFAULT_VENDOR_ID;
@@ -100,7 +103,9 @@ void setup(){
         Serial.println("Init failed");
 
     // Tell Ninja we exist and are alive and off.
-    Serial.println("Creating LED");
+     #if ENABLE_SERIAL 
+       Serial.println("Creating LED");
+     #endif
     NinjaBlock.send("000000"); // We send 000000 because we are identifying as an RGB led
 
 }
@@ -125,10 +130,14 @@ void loop() {
 
                 // FFFFFF is "white" in the RGB widget we identified as
                 if (strcmp(NinjaBlock.strDATA,"FFFFFF") == 0) { 
-                    Serial.println("LED ON");
+                      #if ENABLE_SERIAL
+                        Serial.println("LED ON");
+                        #endif
                     digitalWrite(led, HIGH); 
                 } else if (strcmp(NinjaBlock.strDATA,"000000") == 0) {
-                    Serial.println("LED OFF");
+                    #if ENABLE_SERIAL
+                      Serial.println("LED OFF");
+                      #endif
                     digitalWrite(led, LOW); 
                 }
 
@@ -145,14 +154,18 @@ void loop() {
     // loop gives us (extremely bodgy) debouncing too.
     if (digitalRead(button) == LOW) {
         if (!isButtonDown) {
-            Serial.println("Button Down");
+            #if ENABLE_SERIAL
+              Serial.println("Button Down");
+            #endif
             NinjaBlock.deviceID=5;
             NinjaBlock.send(1);
             isButtonDown = true;
         }
     } else {
         if (isButtonDown) {
-            Serial.println("Button Up");
+            #if ENABLE_SERIAL
+              Serial.println("Button Up");
+            #endif
             NinjaBlock.deviceID=5;
             NinjaBlock.send(0);
             isButtonDown = false;
