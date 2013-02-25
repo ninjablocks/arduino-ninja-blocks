@@ -5,7 +5,8 @@
   and a simple led actuator. This is awesome because it gives your Arduino project a
   REST interface in a couple of minutes.
   
-  @justy : Note that the EtherTen reserves pins 11-13 for Ethernet and Card operations
+  @justy : Note that the EtherTen reserves pins 11-13 for Ethernet and Card operations.  The Arduino Ethernet
+  shield uses pin 10 and 4 also.
   
   Ninja Params
   ------------
@@ -17,7 +18,7 @@
   
   token    For hacking use the virtual block token from https://a.ninja.is/hacking , there
            are other ways to get a token but hard to squeeze into a library for a 328.
-  nodeID   This is the boards ID. Can be any 12+char string. Its used in REST so its a
+  nodeID   This is the board's ID. Can be any 12+char string. It's used in REST so it's a
            good idea to make it easy to remember, e.g. ARDUINOBLOCK.
   vendorID Use 0 with the device IDs here http://ninjablocks.com/docs/device-ids and 
            you get pretty widgets for "free". Create your own by pinging help@ninjablocks.com.
@@ -36,7 +37,7 @@
      For the button we'll just ground pin 5 - feel free to wire up a button. In the real 
      world you would obviously want to debounce.
 
-     Connect an led to pin 13 and ground.
+     Connect the anode (long lead, +ve) of a LED to pin 7, and connect that LED's cathode (short lead, -ve) to GND through a 330R-1K resistor. 
 
   2) Copy the NinjaBlock library into your Arduino libraries dir. 
   
@@ -93,8 +94,8 @@ void setup(){
 
     NinjaBlock.host = "api.ninja.is";
     NinjaBlock.port = 80;
-    NinjaBlock.nodeID = "ARDUINOBLOCK";  // Name this as you wish
-    NinjaBlock.token = "VIRTUAL_BLOCK_TOKEN"; // Get yours from https://a.ninja.is/hacking 
+    NinjaBlock.nodeID = "ETHERSHIELDBLOCK";  // Name this as you wish
+    NinjaBlock.token = "JsYkBvIABRJgjc74IGE6o8ICNe07l9UD81vI8cXB0"; // Get yours from https://a.ninja.is/hacking 
     NinjaBlock.guid = "0";
     NinjaBlock.vendorID=DEFAULT_VENDOR_ID;
     NinjaBlock.deviceID=LED_DEVICE_ID;
