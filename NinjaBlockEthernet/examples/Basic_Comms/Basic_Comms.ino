@@ -95,7 +95,7 @@ void setup(){
     NinjaBlock.host = "api.ninja.is";
     NinjaBlock.port = 80;
     NinjaBlock.nodeID = "ETHERSHIELDBLOCK";  // Name this as you wish
-    NinjaBlock.token = "JsYkBvIABRJgjc74IGE6o8ICNe07l9UD81vI8cXB0"; // Get yours from https://a.ninja.is/hacking 
+    NinjaBlock.token = "VIRTUAL_BLOCK_TOKEN"; // Get yours from https://a.ninja.is/hacking 
     NinjaBlock.guid = "0";
     NinjaBlock.vendorID=DEFAULT_VENDOR_ID;
     NinjaBlock.deviceID=LED_DEVICE_ID;
@@ -153,7 +153,8 @@ void loop() {
 
     // We do it this way so it doesn't block the receive. The slight delay in the
     // loop gives us (extremely bodgy) debouncing too.
-    if (digitalRead(button) == LOW) {
+    // @justy : Note that in previous iterations of this sketch the logic here was reversed- i.e. we drove the pin LOW when the button was pressed.
+    if (digitalRead(button) == HIGH) {
         if (!isButtonDown) {
             #if ENABLE_SERIAL
               Serial.println("Button Down");
