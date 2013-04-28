@@ -3,7 +3,7 @@ arduino-ninja-blocks
 
 Arduino libraries for connecting to the Ninja API.
 
-*NinjaBlocksEthernet* is a minimal library for connecting directly to the Ninja API from any board compatible with the standard Arduino Ethernet library. All up, it uses around 1K or RAM. 
+*NinjaBlocksEthernet* is a minimal library for connecting directly to the Ninja API from any board compatible with the standard Arduino Ethernet library. All up, it uses around 1K of RAM. 
 
 *NinjaBlocksSerial* is a streamlined version of the code that runs on the Ninja Block. This is what you want to use to connect an Arduino project to something (say a Beagle Bone or Raspberry Pi) running the Ninja Node.js Client. 
 
