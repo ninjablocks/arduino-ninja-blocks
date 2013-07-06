@@ -139,11 +139,15 @@ const byte kHeaderLength = sizeof(kStrHeaderEnd);
 // will keep reading bytes until it has matched the header, or it has read all available bytes
 inline void skipHeader(const int bytesAvailable, int &bytesRead) {
 	//skip past header
+	//Serial.print("_Head=");
 	for (uint8_t matching=0
 		; (matching < kHeaderLength) && (bytesRead < bytesAvailable)
 		; bytesRead++) {
-		matching = ((recvclient.read() == kStrHeaderEnd[matching]) ? matching+1 : 0);
+		char curByte = recvclient.read();
+		//Serial.print(curByte);	
+		matching = ((curByte == kStrHeaderEnd[matching]) ? matching+1 : 0);
 	}
+	//Serial.println("");
 }
 
 const char kCharInvertedCommas	= '\"';
@@ -179,11 +183,17 @@ char * valueString(const char *name, char *data, int &index, const int length) {
 	}
 	if (index < length) {
 		//if searching for a string seek end of string ("), otherwise (,) ends an int
-		char endChar = (data[index-1]==kCharInvertedCommas) ? kCharInvertedCommas : ',';
+		char endChar = ',';
+		if (data[index-1]==kCharInvertedCommas) endChar = kCharInvertedCommas;
+		if (data[index]=='{') endChar = '}';
+		
 		int start = index;
-		while ((index < length) && (data[index] != endChar)) {
+		while ((index < length) && (data[index] != endChar) && (data[index] != '}')) {
 			index++;
 		}
+		
+		if((index < length) && (endChar == '}')) index++;
+
 		if (index < length) {
 			data[index] = '\0'; // insert string terminator after value (string or int)
 			result = &data[start];
@@ -194,7 +204,8 @@ char * valueString(const char *name, char *data, int &index, const int length) {
 
 bool NinjaBlockClass::receiveConnected(void) {
 	bool gotHeader = false;
-	bool gotData = false;
+	bool gotData = false;			
+	IsTick = false;
 	int bytesAvailable = recvclient.available();
 	if (bytesAvailable > 0)
 	{
@@ -213,10 +224,13 @@ bool NinjaBlockClass::receiveConnected(void) {
 
 			char data[DATA_SIZE];
 			//read data into array eg. {"DEVICE":[{"G":"0","V":0,"D":1000,"DA":"FFFFFF"}]}
+			Serial.print("_Recv=");
 			for (bytesRead=0; bytesRead<bytesAvailable; bytesRead++) {
 				data[bytesRead] = recvclient.read();
 				//Serial.print(data[bytesRead]);
+				Serial.print(data[bytesRead]);		
 			}
+			Serial.println("");
 			data[bytesRead] = '\0'; //terminate data as string
 			bytesRead = 0;
 			char *strVal;
@@ -238,39 +252,43 @@ bool NinjaBlockClass::receiveConnected(void) {
 					 	// Serial.println(intDID);
 
 						int start = bytesRead;
-						strVal = valueString("DA\":\"", data, bytesRead, bytesAvailable);
-						if (strVal != NULL) {
-							strcpy(strDATA, strVal);
-							IsDATAString = true;
-							gotData = true;
-							// Serial.print("strDATA=");
-							// Serial.println(strDATA);
-						}
-						else { // may be an int value
-							bytesRead = start; // reset to where we were before attempting (data is unmodified if NULL was returned)
-							strVal = valueString("DA\":", data, bytesRead, bytesAvailable);
-							if (strVal) {
-								intDATA = atoi(strVal);
-								IsDATAString = false;
-								gotData = true;
-								// Serial.print("intDATA=");
-								// Serial.println(intDATA);
-							}
-						}
+ 						strVal = valueString("DA\":\"", data, bytesRead, bytesAvailable);
+ 						if (strVal != NULL) {
+ 							strcpy(strDATA, strVal);
+ 							IsDATAString = true;
+ 							gotData = true;
+ 							//Serial.print("strDATA=");
+ 							//Serial.println(strDATA);
+ 						}
+ 						else { // may be an int value
+ 							bytesRead = start; // reset to where we were before attempting (data is unmodified if NULL was returned)
+ 							strVal = valueString("DA\":", data, bytesRead, bytesAvailable);
+ 							if (strVal) {
+ 								intDATA = atoi(strVal);
+ 								IsDATAString = false;
+ 								gotData = true;
+ 								// Serial.print("intDATA=");
+ 								// Serial.println(intDATA);
+ 							}
+ 						}
+
+
 					}
 				}
 			}
+
 		}
-	}
-	if (gotHeader) {
-		//if a header was received, there was some data after (either json, or some html etc)
+		else { //no data - NB cloud sent a keep alive tick
+			IsTick = true;
+		}
 		//purge and close the stream
 		recvclient.flush();
 		delay(100);
 		recvclient.stop();
 		delay(100);
 	}
-	return gotData;
+
+	return gotData || IsTick;
 }
 
 NinjaBlockClass NinjaBlock;

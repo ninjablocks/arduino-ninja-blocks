@@ -13,9 +13,9 @@
 #include <SPI.h>
 #include <Ethernet.h>
 
-#define DATA_SIZE  128
+#define DATA_SIZE  150
 #define GUID_LEN	36
-#define DATA_LEN	96
+#define DATA_LEN	128
 
 class EthernetClient;
 
@@ -36,6 +36,7 @@ public:
 	int intDATA;
 	char strDATA[DATA_LEN];
 	bool IsDATAString;
+	bool IsTick;
 
 	int begin();
 	void send(int data);

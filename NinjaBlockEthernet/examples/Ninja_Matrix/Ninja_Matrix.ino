@@ -124,45 +124,77 @@ void loop() {
 
   if(NinjaBlock.receive())
   {
-    // If this function returns true, there are commands (data) from the server
-    // Return values are:
-    // NinjaBlock.strGUID
-    // NinjaBlock.intVID
-    // NinjaBlock.intDID
-    // NinjaBlock.intDATA - if data is integer
-    // NinjaBlock.strDATA - if data is string
+        // If this function returns true, there are either commands (data) from the server
+        // or a keep alive Tick has been sent
+        //First, you MUST check if it is a Tick
+        if(NinjaBlock.IsTick) { //There is no input, just a keep alive update
+         		
+         		//Make sure any devices tha don't regularly send data to the cloud
+         		// are updated here or they will time out
+         		
+        } else { //There is data to respond to 
+         
+			// Return values are:
+			// NinjaBlock.strGUID
+			// NinjaBlock.intVID
+			// NinjaBlock.intDID
+			// NinjaBlock.intDATA - if data is integer
+			// NinjaBlock.strDATA - if data is string (note char[64])
+	
+			if (NinjaBlock.IsDATAString) {
+	
+				// Serial.print("strDATA=");
+				// Serial.println(NinjaBlock.strDATA);
+				
+				// NOTE: This library can now read serialised JSON
+				// It will appear as a DATA String, but will contain multiple values
+				// If your DeviceID sends serialised JSON adapt the following code:
+				//	(responds to a Light protocol sending "on":true and "bri":0-254)
+				//
+				//     	int bytesRead = 0;
+                //		int bytesAvailable = strlen(NinjaBlock.strDATA);
+                //		if (jsonString("on\\\":true", NinjaBlock.strDATA, bytesRead, bytesAvailable) != NULL) {
+                //			char * strValue = jsonString("bri\\\":", NinjaBlock.strDATA, bytesRead, bytesAvailable);
+				// 			if(strValue != NULL) {
+                //  			int brightness = atoi(strValue);
+				//				char buf[8]; //Using a buffer for String->char[]
+				//				itoa(brightness,buf,10);
+				//				analogWrite(led, brightness);
+				//			}
+				//		}
 
-      digitalWrite(statusled, HIGH);   // flash the status led on data received 
-
-      Serial.print("DA:");
-      if (NinjaBlock.IsDATAString) {
-          Serial.print(NinjaBlock.strDATA);
-          if (NinjaBlock.intDID == 7000) {
-            dmd.drawMarquee(NinjaBlock.strDATA,strlen(NinjaBlock.strDATA),(32*DISPLAYS_ACROSS)-1,0, WHITE, BLACK);
-            marquee = true;
-            // TODO: Draw strings that will fit rather than scrolling them, change font, draw pixels, etc.
-          }
-      } else {
-        // Do something with int data
-        Serial.print("INT=");
-        Serial.print(NinjaBlock.intDATA);
-      }
-
-      Serial.print(" DID:");
-      Serial.println(NinjaBlock.intDID);
-   }
-
-  if ( marquee ) {
-    long start=millis();
-    long timer=start;
-    boolean ret=false;
-    while(!ret){
-      if ((timer+30) < millis()) {
-        ret=dmd.stepMarquee(-1,0);
-        timer=millis();
-      }
-    }
-  }
+			  digitalWrite(statusled, HIGH);   // flash the status led on data received 
+		
+			  Serial.print("DA:");
+			  if (NinjaBlock.IsDATAString) {
+				  Serial.print(NinjaBlock.strDATA);
+				  if (NinjaBlock.intDID == 7000) {
+					dmd.drawMarquee(NinjaBlock.strDATA,strlen(NinjaBlock.strDATA),(32*DISPLAYS_ACROSS)-1,0, WHITE, BLACK);
+					marquee = true;
+					// TODO: Draw strings that will fit rather than scrolling them, change font, draw pixels, etc.
+				  }
+			  } else {
+				// Do something with int data
+				Serial.print("INT=");
+				Serial.print(NinjaBlock.intDATA);
+			  }
+		
+			  Serial.print(" DID:");
+			  Serial.println(NinjaBlock.intDID);
+			}
+	   }
+	
+	  if ( marquee ) {
+		long start=millis();
+		long timer=start;
+		boolean ret=false;
+		while(!ret){
+		  if ((timer+30) < millis()) {
+			ret=dmd.stepMarquee(-1,0);
+			timer=millis();
+		  }
+		}
+	  }
 
 }
 
