@@ -114,40 +114,66 @@ void setup(){
 void loop() {
 
     if(NinjaBlock.receive()) {
-        // If this function returns true, there are commands (data) from the server
-        // Return values are:
-        // NinjaBlock.strGUID
-        // NinjaBlock.intVID
-        // NinjaBlock.intDID
-        // NinjaBlock.intDATA - if data is integer
-        // NinjaBlock.strDATA - if data is string (note char[64])
-
-        if (NinjaBlock.IsDATAString) {
-
-            // Serial.print("strDATA=");
-            // Serial.println(NinjaBlock.strDATA);
-
-            if (NinjaBlock.intDID == 1000) {
-
-                // FFFFFF is "white" in the RGB widget we identified as
-                if (strcmp(NinjaBlock.strDATA,"FFFFFF") == 0) { 
-                      #if ENABLE_SERIAL
-                        Serial.println("LED ON");
-                        #endif
-                    digitalWrite(led, HIGH); 
-                } else if (strcmp(NinjaBlock.strDATA,"000000") == 0) {
-                    #if ENABLE_SERIAL
-                      Serial.println("LED OFF");
-                      #endif
-                    digitalWrite(led, LOW); 
-                }
-
-            }
-        } else {
-            // Do something with int data
-            // Serial.print("intDATA=");
-            // Serial.println(NinjaBlock.intDATA);
-         }
+        // If this function returns true, there are either commands (data) from the server
+        // or a keep alive Tick has been sent
+        //First, you MUST check if it is a Tick
+        if(NinjaBlock.IsTick) { //There is no input, just a keep alive update
+         		
+         		//Make sure any devices tha don't regularly send data to the cloud
+         		// are updated here or they will time out
+         		
+        } else { //There is data to respond to 
+         
+			// Return values are:
+			// NinjaBlock.strGUID
+			// NinjaBlock.intVID
+			// NinjaBlock.intDID
+			// NinjaBlock.intDATA - if data is integer
+			// NinjaBlock.strDATA - if data is string (note char[64])
+	
+			if (NinjaBlock.IsDATAString) {
+	
+				// Serial.print("strDATA=");
+				// Serial.println(NinjaBlock.strDATA);
+				
+				// NOTE: This library can now read serialised JSON
+				// It will appear as a DATA String, but will contain multiple values
+				// If your DeviceID sends serialised JSON adapt the following code:
+				//	(responds to a Light protocol sending "on":true and "bri":0-254)
+				//
+				//     	int bytesRead = 0;
+                //		int bytesAvailable = strlen(NinjaBlock.strDATA);
+                //		if (jsonString("on\\\":true", NinjaBlock.strDATA, bytesRead, bytesAvailable) != NULL) {
+                //			char * strValue = jsonString("bri\\\":", NinjaBlock.strDATA, bytesRead, bytesAvailable);
+				// 			if(strValue != NULL) {
+                //  			int brightness = atoi(strValue);
+				//				char buf[8]; //Using a buffer for String->char[]
+				//				itoa(brightness,buf,10);
+				//				analogWrite(led, brightness);
+				//			}
+				//		}
+				
+				if (NinjaBlock.intDID == 1000) {
+	
+					// FFFFFF is "white" in the RGB widget we identified as
+					if (strcmp(NinjaBlock.strDATA,"FFFFFF") == 0) { 
+						  #if ENABLE_SERIAL
+							Serial.println("LED ON");
+							#endif
+						digitalWrite(led, HIGH); 
+					} else if (strcmp(NinjaBlock.strDATA,"000000") == 0) {
+						#if ENABLE_SERIAL
+						  Serial.println("LED OFF");
+						  #endif
+						digitalWrite(led, LOW); 
+					}
+	
+				}
+			} else {
+				// Do something with int data
+				// Serial.print("intDATA=");
+				// Serial.println(NinjaBlock.intDATA);
+			 }
 
     }
 
