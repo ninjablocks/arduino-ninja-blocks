@@ -26,7 +26,7 @@ Usage Notes
 1. Hit the forums http://forums.ninjablocks.com if something isn't clear. 
 2. Copy your libraries into the Arduino IDEs library folder 
 3. Get a virtual_block_token from https://a.ninja.is/hacking 
-4. 
+4. Configure Wi-Fly (using an Xbee USB breakout board and CoolTerm/Terminal) to your desired baud rate, flush timeout, and flush size. It hasn't worked for more than 9600 baud while using the SoftwareSerial, however, I am willing to learn. You can also try to utilize the hardware Serial and switch the debugging around (of course, you will also need to disconnect and re-connect to re-program the Uno) to see if you can get it any faster.
 5. Use the Ninja Dashboard, REST interface, or helper libs to pissfart to your hearts content!
 
 <code>
