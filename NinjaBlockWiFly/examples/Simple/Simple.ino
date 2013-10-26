@@ -83,8 +83,8 @@
 #define RF_DEVICE_ID 11
 #define BUTTON_DEVICE_ID 5
 
-byte led = 7;  // Connect the anode (long lead, +ve) of a LED to this pin, and connect that LED's cathode (short lead, -ve) to GND through a 330R-1K resistor. 
-byte rfTx = 4; // transmit pin
+const byte led = 7;  // Connect the anode (long lead, +ve) of a LED to this pin, and connect that LED's cathode (short lead, -ve) to GND through a 330R-1K resistor. 
+const byte rfTx = 4; // transmit pin
 
 SoftwareSerial WiFlySerial(2,3);
 WiFly wifly;
@@ -93,10 +93,6 @@ RCSwitch mySwitch = RCSwitch();
 char LED_VALUE[] = "000000";
 const char mySSID[] = "SSID";
 const char myPassword[] = "PASS";
-
-#define NINJA_HOST 0
-#define NODE_ID 1
-#define VB_TOKEN 2
 
 void setup(){
   DSBEGIN();
@@ -138,14 +134,12 @@ void setup(){
   }
 
   //Register LED
-  DPRINTLN(F("Creating LED"));
   NinjaBlock.guid="0";
   NinjaBlock.vendorID=DEFAULT_VENDOR_ID;
   NinjaBlock.deviceID=LED_DEVICE_ID;
   NinjaBlock.send(LED_VALUE);
 
   //Register RF device
-  DPRINTLN(F("Creating RF device"));
   NinjaBlock.guid="0";
   NinjaBlock.vendorID=DEFAULT_VENDOR_ID;
   NinjaBlock.deviceID = RF_DEVICE_ID;

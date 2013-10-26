@@ -35,6 +35,7 @@ public:
 	int intDATA;
 	char strDATA[DATA_LEN];
 	bool IsDATAString;
+	bool IsTick;
 
 	int begin();
 	void send(int data);

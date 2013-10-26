@@ -1,7 +1,7 @@
 #include "NinjaBlockWiFly.h"
 
 #undef DEBUG_SERIAL
-//#define DEBUG_SERIAL
+#define DEBUG_SERIAL
 
 #ifdef DEBUG_SERIAL
 #define DPRINT(A) debugSerial->print(A)
@@ -16,39 +16,39 @@
 
 int NinjaBlockClass::begin()
 {
-	DPRINTLN(F("NinjaBlockClass::begin"));
+	DPRINTLN(F("$$$"));
 	int result = 0;
 	if (ALLNOTNULL(host, nodeID, token))
 	{
 		if( !client.open(host, port) ) {
 			//it can't connect
 			result = 0;
-			DPRINTLN(F("Cannot connect to host"));
+			DPRINTLN(F("!26"));
 		}
 		else {
 			result = 1;
 		}
 	} else {
-		DPRINTLN(F("need to use provide connection params"));
+		DPRINTLN(F("!32"));
 	}
 	return result;
 }
 
 void NinjaBlockClass::httppost(char *postData)
 {	
-	DPRINT("_");
+	DPRINT(F("->"));
     if( client.open(host,port) ) {
 		sendHeaders(true,client);
 		client.print(F("Content-Length: "));
 		client.println(strlen(postData));
 		client.println();
 		client.println(postData);	
-		DPRINT(F("Sent="));
-		DPRINTLN(postData);		
+		DPRINTLN(F("P"));
+		//DPRINTLN(postData);		
 		client.flush();
 		client.close();
 	} else {
-		DPRINTLN(F("Send Failed"));
+		DPRINTLN(F("!51"));
 	}
 	return;
 }
@@ -150,15 +150,15 @@ bool NinjaBlockClass::receive(void) {
 	if(!client.isConnected())
 	{
 		// connect if not connected
-		DPRINT(F("."));
+		DPRINT(F("o"));
 		//client.close();
 		if(client.open(host,port)==1)
 		{
-			DPRINT(F("+"));
+			DPRINTLN(F("R"));
 			sendHeaders(false, client);
 			client.println();
 		} else {
-			DPRINTLN(F("Cannot connect to host"));
+			DPRINTLN(F("!161"));
 		}
 	}
 	if (client.isConnected())
@@ -199,6 +199,7 @@ bool NinjaBlockClass::receiveConnected(void) {
 	int bytesRead = 0;
 	int index = 0;
 	char data[DATA_SIZE];
+	IsTick = false;
 
 	//skip past header
 	uint8_t matching=0;
@@ -238,7 +239,7 @@ bool NinjaBlockClass::receiveConnected(void) {
 		char *strVal;
 		bytesRead = 0;
 		data[index] = 0;//null terminate it
-		//DPRINT("DATA="); DPRINTLN(index);
+		DPRINT(F("<-"));
 		strVal = valueString("G\":\"", data, bytesRead, index);
 		if (strVal) {
 			strcpy(strGUID, strVal);
@@ -262,7 +263,7 @@ bool NinjaBlockClass::receiveConnected(void) {
 						strcpy(strDATA, strVal);
 						IsDATAString = true;
 						gotData = true;
-						// DPRINT("strDATA=");
+						DPRINTLN(F("sD"));
 						// DPRINTLN(strDATA);
 					}
 					else { // may be an int value
@@ -272,12 +273,17 @@ bool NinjaBlockClass::receiveConnected(void) {
 							intDATA = atoi(strVal);
 							IsDATAString = false;
 							gotData = true;
-							// DPRINT(F("intDATA="));
+							DPRINTLN(F("iD"));
 							// DPRINTLN(intDATA);
 						}
 					}
 				}
 			}
+		} 
+		if( !gotData ) {
+			//this is a tick from the cloud
+			DPRINTLN(F("T"));
+			IsTick = true;
 		}
 		//if a header was received, there was some data after (either json, or some html etc)
 		//purge and close the stream
@@ -286,7 +292,7 @@ bool NinjaBlockClass::receiveConnected(void) {
 		client.close();
 		delay(100);
 	}
-	return gotData;
+	return gotData || IsTick;
 }
 
 NinjaBlockClass NinjaBlock;
