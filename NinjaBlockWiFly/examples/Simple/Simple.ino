@@ -126,8 +126,8 @@ void setup(){
   #endif
   NinjaBlock.host = "api.ninja.is";
   NinjaBlock.port = 80;
-  NinjaBlock.nodeID = "ARDUINOBLOCK";
-  NinjaBlock.token = "YOUR_TOKEN";
+  NinjaBlock.nodeID = PSTR("ARDUINOBLOCK");
+  NinjaBlock.token = PSTR("YOUR_TOKEN");
   if (NinjaBlock.begin()==0) {
       DPRINTLN(F("Init failed"));
       wifly.terminal();    
