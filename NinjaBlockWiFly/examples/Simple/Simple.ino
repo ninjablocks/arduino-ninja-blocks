@@ -158,7 +158,14 @@ void loop() {
       // NinjaBlock.intDATA - if data is integer
       // NinjaBlock.strDATA - if data is string (note char[64])
 
-      if (NinjaBlock.IsDATAString) {
+      if( NinjaBlock.IsTick ) {
+        //update sender
+        NinjaBlock.guid="0";
+        NinjaBlock.vendorID=DEFAULT_VENDOR_ID;
+        NinjaBlock.deviceID=LED_DEVICE_ID;
+        NinjaBlock.send(LED_VALUE);
+      }
+      else if (NinjaBlock.IsDATAString) {
 
           // Serial.print("strDATA=");
           // DPRINTLN(NinjaBlock.strDATA);
