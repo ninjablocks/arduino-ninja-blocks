@@ -20,8 +20,8 @@ class NinjaBlockClass {
 
 public:
 	char *host;
-	char *nodeID;
-	char *token;
+	prog_char *nodeID;
+	prog_char *token;
 	char *guid;
 	int port;
 	int vendorID;

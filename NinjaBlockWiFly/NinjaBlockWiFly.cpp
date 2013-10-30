@@ -60,7 +60,7 @@ void NinjaBlockClass::sendHeaders(bool isPOST, WiFly hclient) {
 	else 
 		strcpy_P(strData,PSTR("GET"));
 	strcat_P(strData,PSTR(" /rest/v0/block/"));
-	strcat(strData, nodeID);
+	strcat_P(strData, nodeID);
 	if (isPOST)  
 		strcat_P(strData,PSTR("/data"));
 	else 
@@ -75,7 +75,7 @@ void NinjaBlockClass::sendHeaders(bool isPOST, WiFly hclient) {
 Content-Type: application/json\r\n\
 Accept: application/json\r\n"));
 	strcpy_P(strData,PSTR("X-Ninja-Token: "));
-	strcat(strData, token);
+	strcat_P(strData, token);
 	strcat_P(strData,PSTR("\r\n"));
 	hclient.print(strData);
 }
@@ -101,13 +101,16 @@ char *int2str(int num) {
 char strSend[DATA_SIZE];
 void addStringAndUnderscore(char * str) {
 	strcat(strSend, str);
-	strcat(strSend, "_");
+	strcat_P(strSend, PSTR("_"));
 }
-
+void addStringAndUnderscore_P(prog_char * str) {
+	strcat_P(strSend, str);
+	strcat_P(strSend, PSTR("_"));
+}
 void NinjaBlockClass::ninjaMessage(bool isInt, int intData, char *charData) {
 	if (guid != NULL) {
 		strcpy_P(strSend,PSTR("{\"GUID\": \""));
-		addStringAndUnderscore(nodeID);
+		addStringAndUnderscore_P(nodeID);
 		addStringAndUnderscore(guid);
 		addStringAndUnderscore(int2str(vendorID));
 		strcat(strSend, int2str(deviceID));
@@ -133,28 +136,17 @@ void NinjaBlockClass::ninjaMessage(bool isInt, int intData, char *charData) {
 
 const char kStrHeaderEnd[] = {'\r', '\n', '\r', '\n'};
 const byte kHeaderLength = sizeof(kStrHeaderEnd);
-
-// will keep reading bytes until it has matched the header, or it has read all available bytes
-void skipHeader(const int bytesAvailable, int &bytesRead, WiFly client) {
-	//skip past header
-	uint8_t matching=0;
-	while(client.available() && matching < kHeaderLength) {
-		char ch = client.read();
-		matching = ((ch == kStrHeaderEnd[matching]) ? matching+1 : 0);
-	}
-}
-
 const char kCharInvertedCommas	= '\"';
 bool NinjaBlockClass::receive(void) {
 	bool gotData = false;
 	if(!client.isConnected())
 	{
 		// connect if not connected
-		DPRINT(F("o"));
+		DPRINT(F("-"));
 		//client.close();
 		if(client.open(host,port)==1)
 		{
-			DPRINTLN(F("R"));
+			DPRINTLN(F("-"));
 			sendHeaders(false, client);
 			client.println();
 		} else {
