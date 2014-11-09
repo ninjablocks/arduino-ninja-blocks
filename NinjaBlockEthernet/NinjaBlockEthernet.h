@@ -38,11 +38,13 @@ public:
 	bool IsDATAString;
 
 	int begin();
+	int begin(byte *mac);
 	void send(int data);
 	void send(char *data);
 	bool receive(void);
 	void httppost(char *postData);
 	bool decodeJSON();
+	int maintain();
 
 private:
 	void ninjaMessage(bool, int intData, char *charData);

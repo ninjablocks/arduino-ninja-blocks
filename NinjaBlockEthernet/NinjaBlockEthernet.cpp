@@ -2,7 +2,7 @@
 
 //#include <MemoryFree.h> 
 
-byte mac[] = { 0xCE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
+byte _mac[] = { 0xCE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED};
 
 EthernetClient client;
 EthernetClient recvclient;
@@ -10,8 +10,10 @@ EthernetClient recvclient;
 #define ALLNOTNULL(A, B, C) ((A!=NULL) && (B!=NULL) && (C!=NULL))
 
 #define kEthernetBytes 4
+#define RETRANSMISSION_TIME 4000
 
-int NinjaBlockClass::begin()
+// Lets you specify your own MAC (instead of default one declared within library).
+int NinjaBlockClass::begin(byte *mac)
 {
 	int result = 1;
 	if (ALLNOTNULL(host, nodeID, token) // has connection params
@@ -28,7 +30,17 @@ int NinjaBlockClass::begin()
 		}
 		Serial.println();
 	}
+	// Default retransmission time was 1000ms, which was often too short.
+	W5100.setRetransmissionTime(RETRANSMISSION_TIME);
 	return result;
+}
+
+// Uses baked-in mac (for back-wards compatibility).
+// Sticking with the baked-in MAC will cause problems if two or more
+// instances of this library are used in the same local network.
+int NinjaBlockClass::begin()
+{
+	return begin(_mac);
 }
 
 void NinjaBlockClass::httppost(char *postData)
@@ -73,9 +85,10 @@ void NinjaBlockClass::sendHeaders(bool isPOST, EthernetClient hclient) {
 	strcat(strData ,host);
 	strcat(strData, "\r\n");
 	hclient.print(strData);
-	hclient.print("User-Agent: Ninja Arduino 1.1\r\n\
-Content-Type: application/json\r\n\
-Accept: application/json\r\n");
+	hclient.print("User-Agent: Ninja Arduino 1.1\r\n");
+	if(isPOST) // Content-Type only applicable for POSTs, not GETs.
+		hclient.print("Content-Type: application/json\r\n")
+	hclient.print("Accept: application/json\r\n");
 	strcpy(strData,"X-Ninja-Token: ");
 	strcat(strData, token);
 	strcat(strData,"\r\n");
@@ -207,6 +220,10 @@ bool NinjaBlockClass::receiveConnected(void) {
 			bytesRead = 0;
 
 			if (bytesAvailable > DATA_SIZE) {
+				// Error condition. Potential hang point (infinite loop).
+				// Flush and stop the client so the connection can then restart.
+				recvclient.flush();
+				recvclient.stop();
 				Serial.print("ERR: DATA_SIZE");
 				return false;
 			}
@@ -271,6 +288,13 @@ bool NinjaBlockClass::receiveConnected(void) {
 		delay(100);
 	}
 	return gotData;
+}
+
+//Needs to be called periodically from the sketch. Required so DHCP can be
+// renewed when the lease expires.
+int NinjaBlockClass::maintain(void)
+{
+	return Ethernet.maintain();
 }
 
 NinjaBlockClass NinjaBlock;
