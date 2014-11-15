@@ -10,12 +10,12 @@
 #ifndef ninjablockethernet_h
 #define ninjablockethernet_h
 
-#include <SPI.h>
+#include <utility/w5100.h> // Needed to adjust retransmission time.
 #include <Ethernet.h>
 
-#define DATA_SIZE  128
 #define GUID_LEN	36
 #define DATA_LEN	96
+#define PACKET_LEN 448
 
 class EthernetClient;
 
@@ -42,13 +42,15 @@ public:
 	void send(int data);
 	void send(char *data);
 	bool receive(void);
-	void httppost(char *postData);
 	bool decodeJSON();
 	int maintain();
 
 private:
-	void ninjaMessage(bool, int intData, char *charData);
+	void httppost(bool isInt, int intData, char *charData);
+	void copyNinjaMessage(bool isInt, int intData, char *charData, char *dst);
+	int  calculateNinjaMessageLength(bool isInt, int intData, char *charData);
 	void sendHeaders(bool isPOST, EthernetClient hclient);
+	char* prepareHeaders(bool isPOST, char* packet);
 	bool receiveConnected(void);
 };
 
